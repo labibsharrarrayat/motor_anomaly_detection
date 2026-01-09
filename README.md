@@ -8,3 +8,11 @@ The anomaly detection model has and autoencoder structure. It is trained on regu
 </p>
 
 **Figure 1:** Autoencode-based fault detection model.
+
+Motor faults are simulated by building an experinmental slider where weights can be freely placed or taken off. Placing heavier weights on the sldier places strain on the motor bearing and increases the current consumption.
+
+<p align="center">
+  <img src="Experimental Setup.PNG" width="600">
+</p>
+
+**Figure 2:** Experimental setup of the motor.
