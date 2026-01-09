@@ -16,3 +16,9 @@ Motor faults are simulated by building an experinmental slider where weights can
 </p>
 
 **Figure 2:** Experimental setup of the motor.
+
+<p align="center">
+  <img src="System Overview.PNG" width="600">
+</p>
+
+**Figure 3:** Overview of the system.
