@@ -1,0 +1,459 @@
+<html>
+<head>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.1/jquery.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.1/raphael-min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/justgage/1.5.0/justgage.min.js"></script>
+    <script>
+        window.onload = function() {
+            console.log("Loaded");
+
+            var updateInterval = 1000
+            var numberElements = 200
+
+            //Globals
+            var updateCount = 0;
+
+            var xAccelChart = $("#xAccelChart")
+            var yAccelChart = $("#yAccelChart")
+            var zAccelChart = $("#zAccelChart");
+            var currentChart = $("#current_Chart")
+
+            const val_colour = 70;
+            
+            var prev_time = 0;
+            // Do your operations
+            var current_time;
+            var seconds;
+
+
+            var commonOptions = {
+                scales: {
+                xAxes: [{
+                    type: 'time',
+                    time: {
+                    displayFormats: {
+                        millisecond: 'mm:ss:SSS'
+                    }
+                    }
+                }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero:true
+                        }
+                    }]
+                },
+                legend: {display: true},
+                tooltips:{
+                enabled: false
+                }
+            };
+
+            var xAccelChartInstance = new Chart(xAccelChart, {
+                type: 'line',
+                gridLines: {
+                display: true,
+                color: "#ff0000"
+                },
+                data: {
+                datasets: [{
+                    label: "X Acceleration",
+                    data: 0,
+                    fill: false,
+                    borderColor: '#ff0000',
+                    borderWidth: 1
+                }]
+                },
+                options: Object.assign({}, commonOptions, {
+                title:{
+                    display: true,
+                    text: "Average X-axis Acceleration (m/s2)",
+                    fontSize: 18
+                },
+               
+                })
+            });
+
+            var yAccelChartInstance = new Chart(yAccelChart, {
+                type: 'line',
+                gridLines: {
+                display: true,
+                color: "#ffa500"
+                },
+                data: {
+                datasets: [{
+                    label: "Y Acceleration",
+                    data: 0,
+                    fill: false,
+                    borderColor: '#ffa500',
+                    borderWidth: 1
+                }]
+                },
+                options: Object.assign({}, commonOptions, {
+                title:{
+                    display: true,
+                    text: "Average Y-axis Acceleration (m/s2)",
+                    fontSize: 18
+                }
+                })    
+            });
+
+            var zAccelChartInstance = new Chart(zAccelChart, {
+                type: 'line',
+                data: {
+                datasets: [{
+                    label: "Z Acceleration",
+                    data: 0,
+                    fill: false,
+                    borderColor: '#00ff00',
+                    borderWidth: 1
+                }]
+                },
+                options: Object.assign({}, commonOptions, {
+                title:{
+                    display: true,
+                    text: "Average Z-axis Acceleration (m/s2)",
+                    fontSize: 18
+                }
+                })
+            });
+
+            var currentChartInstance = new Chart(currentChart, {
+                type: 'line',
+                data: {
+                datasets: [{
+                    label: "Current (mA)",
+                    data: 0,
+                    fill: false,
+                    borderColor: '#00bfff',
+                    borderWidth: 1
+                }]
+                },
+                options: Object.assign({}, commonOptions, {
+                title:{
+                    display: true,
+                    text: "Average Current (mA)",
+                    fontSize: 18
+                }
+                })
+            });
+
+            var g2 = new JustGage({
+                id: 'g2',
+                value: 0,
+                label: "vals",
+                min: 0,
+                max: 10,
+                symbol: ' a/m',
+                pointer: true,
+                pointerOptions: {
+                toplength: -15,
+                bottomlength: 20,
+                bottomwidth: 12,
+                color: '#8e8e93',
+                stroke: '#ffffff',
+                stroke_width: 3,
+                stroke_linecap: 'round'
+                },
+                customSectors: {
+                percents: true, // lo and hi values are in %
+                ranges: [{
+                    color : "#FFFF00",
+                    lo : 4,
+                    hi : 10
+                },
+                {
+                    color : "#FFA500",
+                    lo : 1,
+                    hi : 3
+                },
+                {
+                    color : "#800000",
+                    lo : 0,
+                    hi : 0.9
+                }]
+                },
+                gaugeWidthScale: 0.6,
+                counter: true,
+                relativeGaugeSize: true
+            });
+
+            /*window.setInterval(function(){
+                g2.refresh(70, 100, 0, "REPLACE ASAP");
+            }, 2000);
+
+            const col_options = {
+                color: '#D04123'
+            }
+
+            g2.update(col_options)*/
+
+            function addData(data) {
+            if(data){
+                xAccelChartInstance.data.labels.push(new Date());
+                xAccelChartInstance.data.datasets.forEach((dataset) =>{dataset.data.push(data[0])});
+                yAccelChartInstance.data.labels.push(new Date());
+                yAccelChartInstance.data.datasets.forEach((dataset) =>{dataset.data.push(data[1])});
+                zAccelChartInstance.data.labels.push(new Date());
+                zAccelChartInstance.data.datasets.forEach((dataset) =>{dataset.data.push(data[2])});
+                currentChartInstance.data.labels.push(new Date());
+                currentChartInstance.data.datasets.forEach((dataset) =>{dataset.data.push(data[3])});
+
+                current_time = new Date();
+                current_time = current_time.getTime()
+                seconds = (current_time - prev_time) / 1000;
+
+                if (seconds > 1){
+                    g2.refresh(data[4], 10, 0);
+                    prev_time = current_time;
+                }
+
+                
+
+                if(data[4]<1){
+                    console.log("Safe");
+                    document.getElementById("option1").style.backgroundColor = '#4de07b';
+                    document.getElementById("option2").style.backgroundColor = '#75837a';
+                    document.getElementById("option3").style.backgroundColor = '#75837a';
+                }
+
+                else if(data[4] >= 1 && data[4]<=3){
+                    //document.getElementById("option2").style.backgroundColor = '#75837a';
+                    document.getElementById("option1").style.backgroundColor = '#75837a';
+                    document.getElementById("option2").style.backgroundColor = '#FFAF0A';
+                    document.getElementById("option3").style.backgroundColor = '#75837a';
+                }
+
+                else if(data[4]>3){
+                    document.getElementById("option1").style.backgroundColor = '#75837a';
+                    document.getElementById("option2").style.backgroundColor = '#75837a';
+                    document.getElementById("option3").style.backgroundColor = '#FF0000';
+                }
+
+               
+               
+                if(updateCount > numberElements){
+                xAccelChartInstance.data.labels.shift();
+                xAccelChartInstance.data.datasets[0].data.shift();
+                yAccelChartInstance.data.labels.shift();
+                yAccelChartInstance.data.datasets[0].data.shift();
+                zAccelChartInstance.data.labels.shift();
+                zAccelChartInstance.data.datasets[0].data.shift();
+                currentChartInstance.data.labels.shift();
+                currentChartInstance.data.datasets[0].data.shift();
+                
+                }
+                else updateCount++;
+                xAccelChartInstance.update();
+                yAccelChartInstance.update();
+                zAccelChartInstance.update();
+                currentChartInstance.update();
+                currentChartInstance.update();
+            }
+            };
+
+            function updateData() {
+            console.log("Update Data");
+            $.get('/data', addData);
+            //$.getJSON("accelGenerator.php", addData);
+            setTimeout(updateData,updateInterval);
+            }
+
+            updateData();
+        }
+    </script>
+  <style>
+      .container{
+          display:grid;
+          height:90%;
+          grid-template-columns: 1fr 1fr 1fr;
+          grid-template-rows: 0.2fr 3fr 3fr;
+          grid-template-areas: 
+          "heading heading heading"
+          "block1 block2 block3"
+          "block4 block5 block6";
+          grid-gap: 0.9vw;
+      }
+
+      .container div{
+          background:#272626;;
+          border-radius: 2vh;
+          border-style: solid;
+          border-width: 2px;
+          border-color: white;
+          display:flex;
+          align-items: center;
+      }
+
+      #heading{
+          grid-area:heading;
+          display: flex;
+          align-items: center;
+      }
+      
+      #sub-heading{
+          margin: 0px auto;
+          border-color: rgba(255, 255, 255, 0);
+      }
+
+      #sub-heading h1{
+          color: white;
+      }
+
+      #block1{
+          grid-area:block1;
+          display: flex;
+          align-items: center;
+      }
+      #block2{
+          grid-area:block2;
+      }
+      #block3{
+          grid-area:block3;
+      }
+      #block4{
+          grid-area:block4;
+      }
+      #block5{
+          grid-area:block5;
+      }
+      #block6{
+          grid-area:block6;
+         
+      }
+
+      body{
+          background:black;
+      }
+
+      #xData{
+          height:97%;
+          width: 97%;
+          margin: 0px auto;
+          background: #272626;
+          border-color: rgba(255, 255, 255, 0);
+      }
+
+      #yData{
+          height:97%;
+          width: 97%;
+          margin: 0px auto;
+          background: rgba(255, 255, 255, 0);
+          border-color: rgba(255, 255, 255, 0);
+      }
+
+      #zData{
+          height:97%;
+          width: 97%;
+          margin: 0px auto;
+          background: rgba(255, 255, 255, 0);
+          border-color: rgba(255, 255, 255, 0);
+      }
+
+      #cData{
+          height:97%;
+          width: 97%;
+          margin: 0px auto;
+          background: rgba(255, 255, 255, 0);
+          border-color: rgba(255, 255, 255, 0);
+      }
+
+      .gauge {
+            width: 100%;
+            height: 70%;
+            border-color: rgba(255, 255, 255, 0);
+        }
+
+        .vert {
+            text-align: center;
+            display: block;
+            background:#04AA6D;
+            margin:0px auto;
+            height:20%;
+            width:50%;
+            margin-bottom: 4%;
+            border-radius:80px;
+           
+        }
+
+        .p1{
+            margin: 0px auto;
+            font-family: "Arial";
+            font-size: larger;
+        }
+
+
+        .form-cont{
+            width: 100%;
+            background:rgba(255, 0, 0, 0);
+            height:100%;
+            
+        }
+
+    
+
+      @media only screen and (max-width:1000px){
+          .container{
+              grid-template-columns: 1fr;
+              grid-template-rows: 0.2fr 1.2fr 1.2fr 1.2fr 1.2fr 1.2fr 1.2fr;
+              grid-template-areas: 
+                "heading""block1""block2""block3"
+                "block4" "block5" "block6";
+          }
+      }
+  </style>
+
+    
+    
+</head>
+<body>
+  
+  <div class="container">
+      <div id="heading">
+          <div id="sub-heading">
+              <h1>Electric Motor Status</h1>
+          </div>
+      </div>
+      <div id="block1">
+        <div id="xData">
+            <canvas id="xAccelChart"></canvas>
+        </div>
+      </div>
+
+      <div id="block2">
+        <div id="yData">
+            <canvas id="yAccelChart"></canvas>
+        </div>
+      </div>
+
+      <div id="block3">
+          <div id="zData">
+            <canvas id="zAccelChart"></canvas>
+          </div>
+      </div>
+
+      <div id="block4">
+        <div id="cData">
+            <canvas id="current_Chart"></canvas>
+        </div>
+      </div>
+      <div id="block5">
+        <div id="g2" class="gauge" style="border-color: rgba(255, 255, 255, 0);"></div>
+      </div>
+      <div id="block6">
+        <li class="form-cont">
+            <div class="vert" id="option1" style="background:#4de07b;border-color:rgba(255, 255, 255, 0);margin-top:3%">
+                <p class="p1"><b>Status OK</b></p>
+            </div>
+            <div class="vert" id="option2" style="background:#75837a;border-color:rgba(255, 255, 255, 0);">
+                <p class="p1"><b>Abnormality</b></p>
+            </div>
+            <div class="vert" id="option3" style="background:#75837a;border-color:rgba(255, 255, 255, 0);">
+                <p class="p1"><b>Change Motor</b></p>
+            </div>
+        </li>
+      </div>
+  </div>
+
+</body>
+</html>
